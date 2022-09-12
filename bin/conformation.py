@@ -4,27 +4,11 @@ import argparse
 import copy
 import numpy as np
 
+from moves import Move
+from amino import AminoAcid
+
 rng = np.random.default_rng()
 
-HYDROPHOBIC_AMINOS = ["A", "V", "I", "L", "M", "F", "Y", "W"]
-
-
-class AminoAcid:
-    def __init__(self, position=np.array((0, 0)), one_letter_aa="A", index=0):
-        self.position = position
-        self.hp_type = self.get_type(one_letter_aa)
-        self.index = index
-
-    @staticmethod
-    def get_type(one_letter_aa):
-        if one_letter_aa in HYDROPHOBIC_AMINOS:
-            return "H"
-        return "P"
-
-    def __str__(self):
-        return(f"Cet acide aminé numéro {self.index} "
-               f"de type {self.hp_type} a pour position "
-               f"x = {self.position[0]}, y = {self.position[1]}.")
 
 
 class Conformation:
@@ -110,53 +94,71 @@ class Conformation:
                    and np.linalg.norm(self.amino_list[i].position - self.amino_list[j].position) <= 1.1:
                     self.energy += 1
 
-    def get_possible_moves(self, aa_number):
+    def get_possible_moves(self, aa_number=0):
         """ shows which moves are available"""
+
         res = []
-        if aa_number == 0 or aa_number == len(self.sequence):
-            if len(self.get_free_pos()) != 0:
-                res += ["end"]
+        if aa_number == 0 or aa_number == len(self.sequence) - 1:
+            res += self.get_end_moves(aa_number=aa_number)
         else:
             # corner move
             prev_next_diff = self.amino_list[aa_number - 1].position - \
                       self.amino_list[aa_number + 1].position
             if sum(np.abs(prev_next_diff) == np.array((1, 1))) == 2:
-                if self.amino_list[aa_number].position[0] == self.amino_list[aa_number -1].position[0]:
-                    if self.lattice[self.amino_list[aa_number + 1].position[0], self.amino_list[aa_number - 1].position[1]]:
-                        res += ["corner"]
-                else:
-                    if self.lattice[self.amino_list[aa_number - 1].position[0], self.amino_list[aa_number + 1].position[1]]:
-                        res += ["corner"]
+                res += self.get_corner_move(aa_number=aa_number)
 
             # crankshaft move
-            if np.linalg.norm(self.amino_list[aa_number - 2].position - self.amino_list[aa_number + 1].position) == 1:
-                # need-to-be empty positions:
-                in_front_cur = self.amino_list[aa_number].position + 2*(self.amino_list[aa_number - 1].position -  self.amino_list[aa_number].position)
-                in_front_prev = self.amino_list[aa_number - 1].position + 2*(self.amino_list[aa_number - 2].position -  self.amino_list[aa_number - 1].position)
-                if not (self.lattice[in_front_cur[0], in_front_cur[1]]) and not (self.lattice[in_front_prev[0], self.lattice[in_front_prev[1]]]):
-                    res += ["crank"]
-            if np.linalg.norm(self.amino_list[aa_number - 1].position - self.amino_list[aa_number + 2].position) == 1:
-                # need-to-be empty positions:
-                in_front_cur = self.amino_list[aa_number].position + 2*(self.amino_list[aa_number - 1].position -  self.amino_list[aa_number].position)
-                in_front_next = self.amino_list[aa_number + 1].position + 2*(self.amino_list[aa_number + 2].position -  self.amino_list[aa_number + 1].position)
-                if not (self.lattice[in_front_cur[0], in_front_cur[1]]) and not (self.lattice[in_front_prev[0], self.lattice[in_front_prev[1]]]):
-                    res += ["crank"]
+            res += self.get_crankshaft_move(aa_number=aa_number)
         return res
 
-    def end_move(self, side):
-        if side != 0 and side != len(self.sequence) - 1:
-            raise ValueError
-        new_position_list = self.get_free_pos(self.amino_list[side].position)
-        new_position = new_position_list[rng.integers(len(new_position_list), size=1)]
-        self.lattice[new_position[0], new_position[1]] = self.amino_list[side]
-        self.lattice[self.amino_list[side].position[0], self.amino_list[side].position[1]] = None
-        self.amino_list[side].position = np.array(new_position)
+    def get_end_moves(self, aa_number=0):
+        res = []
+        for pos in self.get_free_pos(self.amino_list[aa_number].position):
+            next_move = Move(move_type="end",conf=self, number=aa_number,new_position=pos)
+            next_move.end_move()
+            res += [next_move]
+        return res
+
+    def get_corner_move(self, aa_number=0):
+        res = []
+        if self.amino_list[aa_number].position[0] == self.amino_list[aa_number -1].position[0]:
+            if not self.lattice[self.amino_list[aa_number + 1].position[0], self.amino_list[aa_number - 1].position[1]]:
+                next_move = Move(move_type="corner", conf=self, number=aa_number, new_position=\
+                                 np.array((self.amino_list[aa_number + 1].position[0], self.amino_list[aa_number - 1].position[1])))
+                next_move.corner_move()
+                res += [next_move]
+        else:
+            if not self.lattice[self.amino_list[aa_number - 1].position[0], self.amino_list[aa_number + 1].position[1]]:
+                next_move = Move(move_type="corner", conf=self, number=aa_number, new_position=\
+                                 np.array((self.amino_list[aa_number - 1].position[0], self.amino_list[aa_number + 1].position[1])))
+                next_move.corner_move()
+                res += [next_move]
+        return res
+
+    def get_crankshaft_move(self, aa_number=0):
+        res = []
+        if aa_number >= 2 and aa_number <= len(self.sequence) - 2 \
+           and np.linalg.norm(self.amino_list[aa_number - 2].position - self.amino_list[aa_number + 1].position) == 1:
+            # need-to-be empty positions:
+            in_front_cur = self.amino_list[aa_number].position + 2*(self.amino_list[aa_number - 1].position -  self.amino_list[aa_number].position)
+            in_front_prev = self.amino_list[aa_number - 1].position + 2*(self.amino_list[aa_number - 2].position -  self.amino_list[aa_number - 1].position)
+            if not (self.lattice[in_front_cur[0], in_front_cur[1]]) and not (self.lattice[in_front_prev[0], in_front_prev[1]]):
+                next_move = Move(move_type="crank", conf=self, number=aa_number, new_position=in_front_cur)
+                next_move.crankshaft_move(neightbour_pos=in_front_prev, front=False)
+                res += [next_move]
+        if aa_number >= 1 and aa_number <= len(self.sequence) - 3 \
+           and np.linalg.norm(self.amino_list[aa_number - 1].position - self.amino_list[aa_number + 2].position) == 1:
+            # need-to-be empty positions:
+            in_front_cur = self.amino_list[aa_number].position + 2*(self.amino_list[aa_number - 1].position -  self.amino_list[aa_number].position)
+            in_front_next = self.amino_list[aa_number + 1].position + 2*(self.amino_list[aa_number + 2].position -  self.amino_list[aa_number + 1].position)
+            if not (self.lattice[in_front_cur[0], in_front_cur[1]]) and not (self.lattice[in_front_next[0], in_front_next[1]]):
+                next_move = Move(move_type="crank", conf=self, number=aa_number, new_position=in_front_cur)
+                next_move.crankshaft_move(neightbour_pos=in_front_next, front=True)
+                res += [next_move]
+
+        return res
 
 
-    def corner_move(self):
-
-
-    # def pull_move(self):
 
 if __name__ == "__main__":
     conf = Conformation(sequence="AREAAR")
