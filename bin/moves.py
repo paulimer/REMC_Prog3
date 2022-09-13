@@ -13,7 +13,11 @@ class Move():
         self.move_type = move_type
         self.conf = copy.deepcopy(conf)
         self.new_position = new_position
+        self.old_position = copy.deepcopy(self.conf.amino_list[number].position)
         self.number = number
+
+    def __str__(self):
+        return f"Move type : {self.move_type}, New position : {self.new_position}, Old position : {self.old_position}"
 
     def end_move(self):
         if self.move_type != "end":
