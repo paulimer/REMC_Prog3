@@ -126,7 +126,7 @@ class Conformation:
                    and abs(i - j) > 1 :
                     self.energy -= 1
 
-    def get_possible_moves(self, aa_number=0):
+    def get_possible_moves(self, aa_number=0, search_neigh = "no_pull"):
         """ shows which moves are available"""
 
         res = []
