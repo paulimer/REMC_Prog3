@@ -153,16 +153,18 @@ class Conformation:
 
     def get_corner_move(self, aa_number=0):
         res = []
+        # if aa-1.x == aa.x (and the destination is empty), then aa.x = aa+1.x and aa.y = aa-1.y
         if self.amino_list[aa_number].position[0] == self.amino_list[aa_number -1].position[0]:
-            if not self.lattice[self.amino_list[aa_number + 1].position[0], self.amino_list[aa_number - 1].position[1]]:
-                next_move = Move(move_type="corner", conf=self, number=aa_number, new_position=\
-                                 np.array((self.amino_list[aa_number + 1].position[0], self.amino_list[aa_number - 1].position[1])))
+            target_position = (self.amino_list[aa_number + 1].position[0], self.amino_list[aa_number - 1].position[1])
+            if not self.lattice[target_position]:
+                next_move = Move(move_type="corner", conf=self, number=aa_number, new_position=np.array(target_position))
                 next_move.corner_move()
                 res += [next_move]
+        # if not, then the opposite : aa.x = aa-1.x and aa.y = aa+1.y
         else:
-            if not self.lattice[self.amino_list[aa_number - 1].position[0], self.amino_list[aa_number + 1].position[1]]:
-                next_move = Move(move_type="corner", conf=self, number=aa_number, new_position=\
-                                 np.array((self.amino_list[aa_number - 1].position[0], self.amino_list[aa_number + 1].position[1])))
+            target_position =(self.amino_list[aa_number - 1].position[0], self.amino_list[aa_number + 1].position[1])
+            if not self.lattice[target_position]:
+                next_move = Move(move_type="corner", conf=self, number=aa_number, new_position=np.array(target_position))
                 next_move.corner_move()
                 res += [next_move]
         return res
