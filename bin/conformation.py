@@ -137,9 +137,10 @@ class Conformation:
                       self.amino_list[aa_number + 1].position
             if sum(np.abs(prev_next_diff) == np.array((1, 1))) == 2:
                 res += self.get_corner_move(aa_number=aa_number)
-
-            # crankshaft move
-            res += self.get_crankshaft_move(aa_number=aa_number)
+                # crankshaft move
+                res += self.get_crankshaft_move(aa_number=aa_number)
+        if search_neigh == "pull":
+            pass
         return res
 
     def get_end_moves(self, aa_number=0):
