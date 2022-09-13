@@ -146,7 +146,8 @@ class Conformation:
 
     def get_end_moves(self, aa_number=0):
         res = []
-        for pos in self.get_free_pos(self.amino_list[aa_number].position):
+        prev_aa_number = - 1 if aa_number == self.size - 1 else 1
+        for pos in self.get_free_pos(self.amino_list[prev_aa_number].position):
             next_move = Move(move_type="end",conf=self, number=aa_number,new_position=pos)
             next_move.end_move()
             res += [next_move]
