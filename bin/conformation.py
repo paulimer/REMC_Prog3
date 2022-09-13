@@ -33,13 +33,13 @@ class Conformation:
             self.evaluate_energy()
 
     def __str__(self):
-        res = f"Cette conformation possède {len(self.sequence)} acides aminés\n"
+        res = f"Cette conformation possède {self.size} acides aminés\n"
         res += f"Cette conformation a pour énergie {self.energy}\n"
         res += " "
         min_x = max(self.get_extr_coor(along="x", min=True) - 3, 0)
-        max_x = min(self.get_extr_coor(along="x", min=False) + 3, 2*len(self.sequence))
+        max_x = min(self.get_extr_coor(along="x", min=False) + 3, 2*self.size)
         min_y = max(self.get_extr_coor(along="y", min=True) - 3, 0)
-        max_y = min(self.get_extr_coor(along="y", min=False) + 3, 2*len(self.sequence))
+        max_y = min(self.get_extr_coor(along="y", min=False) + 3, 2*self.size)
         res += "-" * (max_y - min_y)
         res += "\n"
         for i in range(min_x, max_x):
@@ -79,7 +79,7 @@ class Conformation:
             return extr
 
     def create_amino_list(self):
-        self.amino_list = np.ndarray(len(self.sequence), dtype=AminoAcid)
+        self.amino_list = np.ndarray(self.size, dtype=AminoAcid)
         for i, aa in enumerate(self.sequence):
             self.amino_list[i] = AminoAcid(one_letter_aa=aa, index=i)
 
@@ -111,8 +111,8 @@ class Conformation:
         movements = np.array([(-1, 0), (0, -1), (1, 0), (0, 1)])
         for move in movements:
             cur_pos = start_pos + move
-            if (cur_pos[0] >= 0 and cur_pos[0] < len(self.sequence)*2) and \
-               (cur_pos[1] >= 0 and cur_pos[1] < len(self.sequence)*2) and \
+            if (cur_pos[0] >= 0 and cur_pos[0] < self.size*2) and \
+               (cur_pos[1] >= 0 and cur_pos[1] < self.size*2) and \
                self.lattice[cur_pos[0], cur_pos[1]] is None:
                 res.append((cur_pos[0], cur_pos[1]))
         return res
@@ -129,7 +129,7 @@ class Conformation:
         """ shows which moves are available"""
 
         res = []
-        if aa_number == 0 or aa_number == len(self.sequence) - 1:
+        if aa_number == 0 or aa_number == self.size - 1:
             res += self.get_end_moves(aa_number=aa_number)
         else:
             # corner move
@@ -168,7 +168,8 @@ class Conformation:
 
     def get_crankshaft_move(self, aa_number=0):
         res = []
-        if aa_number >= 2 and aa_number <= len(self.sequence) - 2 \
+        # import pdb; pdb.set_trace()
+        if aa_number >= 2 and aa_number <= self.size - 2 \
            and np.linalg.norm(self.amino_list[aa_number - 2].position - self.amino_list[aa_number + 1].position) == 1:
             # need-to-be empty positions:
             in_front_cur = self.amino_list[aa_number].position + 2*(self.amino_list[aa_number - 1].position -  self.amino_list[aa_number].position)
@@ -177,7 +178,7 @@ class Conformation:
                 next_move = Move(move_type="crank", conf=self, number=aa_number, new_position=in_front_cur)
                 next_move.crankshaft_move(neightbour_pos=in_front_prev, front=False)
                 res += [next_move]
-        if aa_number >= 1 and aa_number <= len(self.sequence) - 3 \
+        if aa_number >= 1 and aa_number <= self.size - 3 \
            and np.linalg.norm(self.amino_list[aa_number - 1].position - self.amino_list[aa_number + 2].position) == 1:
             # need-to-be empty positions:
             in_front_cur = self.amino_list[aa_number].position + 2*(self.amino_list[aa_number - 1].position -  self.amino_list[aa_number].position)
