@@ -122,8 +122,9 @@ class Conformation:
         for i in range(len(self.amino_list)):
             for j in range(i + 1, len(self.amino_list)):
                 if self.amino_list[i].hp_type == "H" and self.amino_list[j].hp_type == "H" \
-                   and np.linalg.norm(self.amino_list[i].position - self.amino_list[j].position) <= 1.1:
-                    self.energy += 1
+                   and np.linalg.norm(self.amino_list[i].position - self.amino_list[j].position) <= 1.1\
+                   and abs(i - j) > 1 :
+                    self.energy -= 1
 
     def get_possible_moves(self, aa_number=0):
         """ shows which moves are available"""
