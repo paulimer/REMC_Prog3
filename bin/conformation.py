@@ -28,6 +28,52 @@ class Conformation:
         else:
             self.evaluate_energy()
 
+    def __str__(self):
+        res = f"Cette conformation possède {len(self.sequence)} acides aminés\n"
+        res += f"Cette conformation a pour énergie {self.energy}\n"
+        res += " "
+        min_x = max(self.get_extr_coor(along="x", min=True) - 3, 0)
+        max_x = min(self.get_extr_coor(along="x", min=False) + 3, 2*len(self.sequence))
+        min_y = max(self.get_extr_coor(along="y", min=True) - 3, 0)
+        max_y = min(self.get_extr_coor(along="y", min=False) + 3, 2*len(self.sequence))
+        res += "-" * (max_y - min_y)
+        res += "\n"
+        for i in range(min_x, max_x):
+            res += "|"
+            for j in range(min_y, max_y):
+                if self.lattice[i, j] is None:
+                    res += (" ")
+                elif self.lattice[i, j].hp_type == "H":
+                    res += "H"
+                elif self.lattice[i, j].hp_type == "P":
+                    res += "P"
+            res += "|\n"
+        res += " "
+        res += "-" * (max_y - min_y)
+        return res
+
+    def get_extr_coor(self, along="x", min=True):
+        if min:
+            extr = 2*self.size
+            if along == "x":
+                dim = 0
+            else:
+                dim = 1
+            for amino in self.amino_list:
+                if amino.position[dim] < extr:
+                    extr = amino.position[dim]
+            return extr
+        else:
+            extr = 0
+            if along == "x":
+                dim = 0
+            else:
+                dim = 1
+            for amino in self.amino_list:
+                if amino.position[dim] > extr:
+                    extr = amino.position[dim]
+            return extr
+
     def create_amino_list(self):
         self.amino_list = np.ndarray(len(self.sequence), dtype=AminoAcid)
         for i, aa in enumerate(self.sequence):
@@ -64,26 +110,6 @@ class Conformation:
                (cur_pos[1] >= 0 and cur_pos[1] < len(self.sequence)*2) and \
                self.lattice[cur_pos[0], cur_pos[1]] is None:
                 res.append((cur_pos[0], cur_pos[1]))
-        return res
-
-    def __str__(self):
-        res = f"Cette conformation possède {len(self.sequence)} acides aminés\n"
-        res += f"Cette conformation a pour énergie {self.energy}\n"
-        res += " "
-        res += "-" * len(self.lattice)
-        res += "\n"
-        for i in range(len(self.lattice)):
-            res += "|"
-            for j in range(len(self.lattice)):
-                if self.lattice[i, j] is None:
-                    res += (" ")
-                elif self.lattice[i, j].hp_type == "H":
-                    res += "H"
-                elif self.lattice[i, j].hp_type == "P":
-                    res += "P"
-            res += "|\n"
-        res += " "
-        res += "-" * len(self.lattice)
         return res
 
     def evaluate_energy(self):
