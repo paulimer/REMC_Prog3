@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import copy
 import numpy as np
 
@@ -10,10 +9,10 @@ from amino import AminoAcid
 rng = np.random.default_rng()
 
 
-
 class Conformation:
-    def __init__(self, sequence="", amino_list = None, lattice=None, energy=None):
+    def __init__(self, sequence="", amino_list = None, lattice=None, energy=None, line=False):
         self.sequence = sequence
+        self.size = len(self.sequence)
 
         if amino_list:
             self.amino_list = copy.deepcopy(amino_list)
@@ -22,7 +21,12 @@ class Conformation:
         if lattice:
             self.lattice = copy.deepcopy(lattice)
         else:
-            self.assign_positions()
+            while True:
+                try:
+                    self.assign_positions(line)
+                    break
+                except:
+                    continue
         if energy:
             self.energy = energy
         else:
@@ -85,21 +89,22 @@ class Conformation:
             raise Exception
         return allowed_pos[int(rng.integers(len(allowed_pos), size=1))]
 
-    def assign_positions(self):
-        self.lattice = np.ndarray(shape=(len(self.sequence)*2, len(self.sequence)*2), dtype=AminoAcid)
-        # starting at 1, amino acid 0 is in (len(self.sequence) - 1, len(self.sequence) -1)
-        self.lattice[len(self.sequence) - 1, len(self.sequence) - 1] = self.amino_list[0]
-        self.amino_list[0].position = np.array((len(self.sequence) - 1, len(self.sequence) - 1))
-        for i in range(1, len(self.sequence)):
-            try:
+    def assign_positions(self, line=False):
+        self.lattice = np.ndarray(shape=(self.size*2, self.size*2), dtype=AminoAcid)
+        if line:
+            self.lattice[self.size - self.size//2, self.size] = self.amino_list[0]
+            self.amino_list[0].position = np.array((self.size - self.size//2, self.size))
+            for i in range(1, self.size):
+                self.lattice[tuple(self.amino_list[0].position + np.array((i, 0)))] = self.amino_list[i]
+                self.amino_list[i].position = np.array((self.amino_list[0].position + np.array((i, 0))))
+        else:
+            # starting at 1, amino acid 0 is in (self.size - 1, self.size -1)
+            self.lattice[self.size - 1, self.size - 1] = self.amino_list[0]
+            self.amino_list[0].position = np.array((self.size - 1, self.size - 1))
+            for i in range(1, self.size):
                 new_position = self.get_next_position(i-1)
                 self.lattice[new_position[0], new_position[1]] = self.amino_list[i]
                 self.amino_list[i].position = np.array(new_position)
-            except:
-                # restart from beginning, this is not a limiting step
-                print("No more room for sequence")
-                self.assign_positions()
-                return
 
     def get_free_pos(self, start_pos):
         res = []
