@@ -8,6 +8,32 @@ from mcsearch import mc_search, BOLTZMANN
 def remc(
         start_conformation, nb_replica, local_steps, step_limit, optimal_energy, t_min, t_max, search_neigh="no_pull"
 ):
+    """
+    Performs a Replica Exchange Monte Carlo search
+
+    Parameters
+    ----------
+    start_conformation: Conformation
+    the conformation at the start of the search
+    nb_replica: int
+    the number of replica
+    local_steps: int
+    the number of steps between exchanges
+    step_limit: int
+    the maximum number of exchanges
+    optimal_energy: int
+    the optimal energy at which point the search is stopped
+    t_min: int
+    the minimum temperature for the replicas
+    t_max: int
+    the maximum temperature for the replicas
+    search_neigh: str
+    the neighbourhood to search
+
+    Returns
+    -------
+    The conformation with the least energy following the search
+    """
     current_energy_list = np.zeros(nb_replica)
     array_t = np.linspace(t_min, t_max)
     replica_list = np.ndarray(nb_replica, dtype=Conformation)

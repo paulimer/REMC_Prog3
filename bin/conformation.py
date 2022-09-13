@@ -10,6 +10,55 @@ rng = np.random.default_rng()
 
 
 class Conformation:
+    """
+    Class representing a particular folding of an amino acid sequence
+
+    Attributes
+    ----------
+    sequence: str
+    sequence of amino acid
+    amino_list: np.ndarray
+    if passed, a list of AminoAcid objects
+    lattice: np.ndarray
+    if passed, a matrix of AminoAcid objects, representing those in space
+    energy: int
+    if passed, the energy of the conformation
+    line: bool
+    whether to start the conformation as a line or random walk
+
+    Methods
+    -------
+
+    get_extr_coor(self, along="x", min=True):
+    gets the extremum of the conformation's coordinates
+
+    create_amino_list(self):
+    initializes the amino_list attribute
+
+    get_next_position(self, prev_aa_num):
+    gets the position of the next amino_acid to place in the random walk initialization
+
+    assign_positions(self, line=False):
+    initializes the conformation's lattice position
+
+    get_free_pos(self, start_pos):
+    gets the free positions around start_pos
+
+    evaluate_energy(self):
+    evaluate the energy of a conformation
+
+    get_possible_moves(self, aa_number=0, search_neigh = "no_pull"):
+    gets all the possible moves at a given position in the sequence
+
+    get_end_moves(self, aa_number=0):
+    gets the possible end Moves
+
+    get_corner_move(self, aa_number=0):
+    gets a corner Move
+
+    get_crankshaft_move(self, aa_number=0):
+    gets a crankshaft Move
+    """
     def __init__(self, sequence="", amino_list = None, lattice=None, energy=None, line=False):
         self.sequence = sequence
         self.size = len(self.sequence)
@@ -57,6 +106,20 @@ class Conformation:
         return res
 
     def get_extr_coor(self, along="x", min=True):
+        """
+        Returns an padded extremum of the conformation position
+
+        Paramters
+        ---------
+        along: str
+        specifies the axis to consider
+        min: bool
+        wether to return the mean or max
+
+        Returns
+        -------
+        int: the padded extremum
+        """
         if min:
             extr = 2*self.size
             if along == "x":
@@ -79,17 +142,38 @@ class Conformation:
             return extr
 
     def create_amino_list(self):
+        """Initializes the amino_list attribute"""
         self.amino_list = np.ndarray(self.size, dtype=AminoAcid)
         for i, aa in enumerate(self.sequence):
             self.amino_list[i] = AminoAcid(one_letter_aa=aa, index=i)
 
     def get_next_position(self, prev_aa_num):
+        """
+        Gets the position of the next AminoAcid to place
+
+        Parameters
+        ----------
+        prev_aa_num: int
+        the current last AminoAcid number
+
+        Returns
+        -------
+        a list of possible position. Raises an exception if there is none
+        """
         allowed_pos = self.get_free_pos((self.amino_list[prev_aa_num].position))
         if len(allowed_pos) == 0:
             raise Exception
         return allowed_pos[int(rng.integers(len(allowed_pos), size=1))]
 
     def assign_positions(self, line=False):
+        """
+        Initializes the position of the conformation on the lattice
+
+        Parameters
+        ----------
+        line: bool
+        whether to initialize as a line or not
+        """
         self.lattice = np.ndarray(shape=(self.size*2, self.size*2), dtype=AminoAcid)
         if line:
             self.lattice[self.size - self.size//2, self.size] = self.amino_list[0]
@@ -107,6 +191,18 @@ class Conformation:
                 self.amino_list[i].position = np.array(new_position)
 
     def get_free_pos(self, start_pos):
+        """
+        Gets the free position around a given position
+
+        Parameters
+        ----------
+        start_pos: np.array of shape 2
+        The given position
+
+        Returns
+        -------
+        a list of free positions
+        """
         res = []
         movements = np.array([(-1, 0), (0, -1), (1, 0), (0, 1)])
         for move in movements:
@@ -118,6 +214,7 @@ class Conformation:
         return res
 
     def evaluate_energy(self):
+        """Evaluate the energy of a conformation"""
         self.energy = 0
         for i in range(len(self.amino_list)):
             for j in range(i + 1, len(self.amino_list)):
@@ -126,9 +223,21 @@ class Conformation:
                    and abs(i - j) > 1 :
                     self.energy -= 1
 
-    def get_possible_moves(self, aa_number=0, search_neigh = "no_pull"):
-        """ shows which moves are available"""
+    def get_possible_moves(self, aa_number=1, search_neigh = "no_pull"):
+        """
+        Gets all possible moves for a given AminoAcid
 
+        Parameters
+        ----------
+        aa_number: int
+        the given AminoAcid number
+        search_neigh: str
+        the type of moves to consider (pull move or standard VHSD)
+
+        Returns
+        -------
+        a list of possible Moves
+        """
         res = []
         if aa_number == 0 or aa_number == self.size - 1:
             res += self.get_end_moves(aa_number=aa_number)
@@ -145,6 +254,7 @@ class Conformation:
         return res
 
     def get_end_moves(self, aa_number=0):
+        """Gets a list of possible end Moves for an AminoAcid"""
         res = []
         prev_aa_number = - 1 if aa_number == self.size - 1 else 1
         for pos in self.get_free_pos(self.amino_list[prev_aa_number].position):
@@ -154,6 +264,7 @@ class Conformation:
         return res
 
     def get_corner_move(self, aa_number=0):
+        """Gets a list (for consistency) of the possible corner Move for an AminoAcid"""
         res = []
         # if aa-1.x == aa.x (and the destination is empty), then aa.x = aa+1.x and aa.y = aa-1.y
         if self.amino_list[aa_number].position[0] == self.amino_list[aa_number -1].position[0]:
@@ -172,6 +283,7 @@ class Conformation:
         return res
 
     def get_crankshaft_move(self, aa_number=0):
+        """Gets a list (for consistency) of the possible crankshaft Move for an AminoAcid"""
         res = []
         # import pdb; pdb.set_trace()
         if aa_number >= 2 and aa_number <= self.size - 2 \

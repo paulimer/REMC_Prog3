@@ -6,7 +6,27 @@ from conformation import Conformation
 BOLTZMANN = 0.0019872
 rng = np.random.default_rng()
 
-def mc_search(current_conformation=Conformation("AA"), nb_steps=1, search_neigh="no_pull", temp = 200):
+def mc_search(
+        current_conformation=Conformation("AA"), nb_steps=1, search_neigh="no_pull", temp = 200
+):
+    """
+    Performs the Monte Carlo search from a given conformation
+
+    Parameters
+    ----------
+    current_conformation: Conformation
+    The conformation at the start of the search
+    nb_steps: int
+    the number of steps to perform
+    search_neigh: str
+    the type of search to perform
+    temp: int
+    the temperature of the search
+
+    Returns
+    -------
+    the Conformation at the end of the search
+    """
     for _ in range(nb_steps):
         residue = rng.integers(low=0, high=len(current_conformation.sequence)-1)
         list_moves = current_conformation.get_possible_moves(residue, search_neigh=search_neigh)
