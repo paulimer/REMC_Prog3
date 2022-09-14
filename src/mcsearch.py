@@ -38,6 +38,7 @@ def mc_search(
             chosen_move = list_moves[int(rng.integers(0, len(list_moves) - 1))]
         # print(chosen_move)
         # print(chosen_move.conf)
+        chosen_move.conf.evaluate_energy()
         energy_delta = chosen_move.conf.energy - current_conformation.energy
         if energy_delta <= 0:
             current_conformation = chosen_move.conf
