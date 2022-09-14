@@ -82,8 +82,8 @@ class Conformation:
             self.evaluate_energy()
 
     def __str__(self):
-        res = f"Cette conformation possède {self.size} acides aminés\n"
-        res += f"Cette conformation a pour énergie {self.energy}\n"
+        res = f"This conformation has {self.size} residues\n"
+        res += f"The energy of this conformation is {self.energy}\n"
         res += " "
         min_x = max(self.get_extr_coor(along="x", min=True) - 3, 0)
         max_x = min(self.get_extr_coor(along="x", min=False) + 3, 2*self.size)

@@ -6,7 +6,7 @@ from conformation import Conformation
 from mcsearch import mc_search, BOLTZMANN
 
 def remc(
-        start_conformation, nb_replica, local_steps, step_limit, optimal_energy, t_min, t_max, search_neigh="no_pull"
+        start_conformation, nb_replica, local_steps, step_limit, t_min, t_max, search_neigh="no_pull", optimal_energy=-10000
 ):
     """
     Performs a Replica Exchange Monte Carlo search
