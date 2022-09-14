@@ -47,7 +47,7 @@ chmod u+x ./main.py
 -  you can run the REMC folding algorithm with insulin as a demo protein
 
 ``` sh
-./src/main.py --file ./data/insulin.fasta
+./main.py --file ./data/insulin.fasta
 ```
 -  You can also customize the different parameters.
 

@@ -56,6 +56,11 @@ if __name__ == "__main__":
                 default=220
         )
         parser.add_argument(
+                "-l",
+                action="store_true",
+                help="Whether to initialize the conformation as line"
+        )
+        parser.add_argument(
                 "--energy",
                 nargs="?",
                 type=int,
@@ -71,7 +76,7 @@ if __name__ == "__main__":
         else:
                 sequence = args.sequence
 
-        start_conf = Conformation(sequence=sequence)
+        start_conf = Conformation(sequence=sequence, line=args.l)
         print("The starting conformation : ")
         print(start_conf)
         if args.energy:
