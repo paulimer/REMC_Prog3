@@ -1,0 +1,6 @@
+name: remc
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - numpy
