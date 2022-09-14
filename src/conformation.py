@@ -3,8 +3,8 @@
 import copy
 import numpy as np
 
-from moves import Move
-from amino import AminoAcid
+from src.moves import Move
+from src.amino import AminoAcid
 
 rng = np.random.default_rng()
 

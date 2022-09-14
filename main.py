@@ -3,9 +3,9 @@
 import argparse
 import sys
 
-from conformation import Conformation
-from remc import remc
-from sequence_ff import get_sequence_from_file
+from src.conformation import Conformation
+from src.remc import remc
+from src.sequence_ff import get_sequence_from_file
 
 if __name__ == "__main__":
         parser = argparse.ArgumentParser(description="Runs a Replica Exchange Monte Carlo algorithm to fold a protein, following the HP model")

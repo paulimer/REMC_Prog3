@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 
-from conformation import Conformation
+from src.conformation import Conformation
 
 BOLTZMANN = 0.0019872
 rng = np.random.default_rng()

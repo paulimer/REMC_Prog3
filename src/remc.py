@@ -2,8 +2,8 @@
 import numpy as np
 rng = np.random.default_rng()
 
-from conformation import Conformation
-from mcsearch import mc_search, BOLTZMANN
+from src.conformation import Conformation
+from src.mcsearch import mc_search, BOLTZMANN
 
 def remc(
         start_conformation, nb_replica, local_steps, step_limit, t_min, t_max, search_neigh="no_pull", optimal_energy=-10000
