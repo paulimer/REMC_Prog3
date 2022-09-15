@@ -1,0 +1,128 @@
+#+title: REMC for Protein Folding
+#+author: Paul Etheimer
+#+STARTUP: beamer
+#+latex_class: beamer
+# #+latex_class_options: [bigger]
+#+latex_header:\setbeamertemplate{navigation symbols}{}
+#+latex_header:\setbeamerfont{caption}{size=\scriptsize}
+#+latex_header: \AtBeginSection[]{\begin{frame}\frametitle{Table of Contents}\tableofcontents[currentsection]\end{frame}}
+#+latex_header_extra:
+#+description:
+#+keywords:
+#+subtitle:
+#+latex_compiler: pdflatex
+#+date: \today
+#+language: en
+#+options: H:2 num:2 toc:t
+#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
+* Introduction
+** Monte Carlo Algorithms
+*** MC algorithm
+:PROPERTIES:
+:BEAMER_env: definition
+:END:
+A Monte Carlo algorithm is a problem solving procedures that uses randomness to approach a solution too complex to solve deterministically.
+** The HP protein folding model
+*** HP model
+:PROPERTIES:
+:BEAMER_env: definition
+:END:
+The Hydrophobic-Polar protein folding model is a highly simplified model of protein folding in space, that relies on the dominance of the /hydrophobic effect/ on soluble protein folding. It sorts amino acid in two categories, hydrophobic or polar.
+** The Replica Exchange Monte Carlo
+*** REMC
+:PROPERTIES:
+:BEAMER_env: definition
+:END:
+The Replica Exchange Monte Carlo (or parallel tempering), is a type of MC algorithm. It runs parallelly multiple MC models, at different temperatures, and exchanges them based on their energy.
+** The VSHD neighbourhood
+*** Representation :BMCOL:
+:PROPERTIES:
+:BEAMER_col: .6
+:END:
+
+#+ATTR_LATEX: :width 200px
+#+CAPTION:The 3 moves implemented : (a) end move (b) corner move (c) crankshaft move (figure from the article)
+#+NAME: fig:moves
+[[./vshd.png]]
+
+*** VSHD :BMCOL:
+:PROPERTIES:
+:BEAMER_col: .3
+:BEAMER_env: definition
+:END:
+A /neighbourhood/ of exploration, consisting of three moves a conformation can perform:
+- an /end move/ (only for end residues)
+  #+BEAMER: \pause
+- /corner move/
+  #+BEAMER: \pause
+- /crankshaft move/
+* Implementation
+** Object-oriented programming
+- Python 3.10 with numpy 1.22
+  #+BEAMER: \pause
+- 3 classes:
+  - AminoAcid - A basic amino acid, attributes: ~position, hp_type, index~
+  - Conformation - The main class, attributes: ~lattice, amino_list, sequence, energy, line~
+  - Move - a class for movement, attributes: ~move_type, conf, number, new_position, old_position~
+** The class relations
+#+ATTR_LATEX: :width 200px
+#+CAPTION: The 3 classes implemented and their relationships
+#+NAME: fig:cls
+[[./classes.png]]
+** Two functions and a main
+- ~mc_search~: Takes a conformation, drives its evolution step by step (internal loop)
+  #+BEAMER: \pause
+- ~remc~: Orchestrates all the replicas, stopping either at a target energy or at a specified maximum number of steps
+  #+BEAMER: \pause
+- ~main.py~: Parses the arguments with ~argparse~, creates the conformation and runs the optimization
+** Around the program
+- Used podman - but limitation to files entry in a CLI
+- Used conda for file handling
+
+* Results
+** Middling at best
+- Slow algorithm: two minutes for 110 residues with 5000 total steps (with random walk initialization)
+  #+BEAMER: \pause
+- Buggy crankshaft moves
+  #+BEAMER: \pause
+- Not much movement without /pull moves/, especially with a line start position
+* Discussion - Post mortem
+** Bad decisions
+    - The exaggerated OOP (~Move~) and deepcopy usage
+  #+BEAMER: \pause
+    - No reproducible examples
+  #+BEAMER: \pause
+    - No non-random test environment
+
+
+** Knowledge limits
+- Lack of knowledge about debugging in Python
+  #+BEAMER: \pause
+- Lack of knowledge about performance profiling in Python
+
+
+
+
+** Tool limits
+    - Manipulating heavy lattices is unwieldly in Python
+  #+BEAMER: \pause
+    - Python is a slow language, especially with low-level programs such as this
+
+** Paper limits
+*** :BMCOL:
+:PROPERTIES:
+:BEAMER_col: .3
+:END:
+- At least a mistake: a wrong comparison sign cost a lot of time
+- The omission of the mention of the usage of the Boltzmann constant is also surprising
+*** :BMCOL:
+:PROPERTIES:
+:BEAMER_col: .6
+:END:
+#+ATTR_LATEX: :width 170px
+#+CAPTION: The problematic *>* sign (and missing constant)
+#+NAME: fig:cls
+[[./figure_red.png]]
+
+** Thank you
+#+BEAMER: \huge{\center Questions?}
